@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.cinebook.CineBookApplicationTests
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.77 s -- in com.cinebook.CineBookApplicationTests

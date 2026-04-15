@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineBook Pro</title>
+<style>
+  :root {
+    --gold:#E8B84B;--gold-dim:#b8902e;--red:#E83B3B;--bg:#0A0A0F;--bg2:#111118;
+    --bg3:#1A1A24;--bg4:#22222F;--surface:#1E1E2A;--border:rgba(255,255,255,0.08);
+    --border2:rgba(255,255,255,0.14);--text:#F0EFE8;--muted:#888890;
+    --green:#3BDE8C;--blue:#4B9BE8;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+  body{min-height:100vh;overflow-x:hidden}
+  ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg2)}
+  ::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:2px}
+  .app{display:flex;height:100vh;overflow:hidden}
+  .sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+  .main{flex:1;overflow-y:auto}
+  .brand{padding:24px 20px 20px;border-bottom:1px solid var(--border)}
+  .brand-logo{font-size:26px;font-weight:800;letter-spacing:2px;color:var(--gold);line-height:1}
+  .brand-sub{font-size:10px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:2px}
+  .nav{padding:16px 12px;flex:1}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;color:var(--muted);font-size:13px;font-weight:500;transition:all .2s;margin-bottom:2px}
+  .nav-item:hover{background:var(--bg3);color:var(--text)}
+  .nav-item.active{background:rgba(232,184,75,0.12);color:var(--gold)}
+  .sidebar-footer{padding:16px 20px;border-top:1px solid var(--border)}
+  .user-avatar{width:32px;height:32px;background:linear-gradient(135deg,var(--gold),var(--red));border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#000;flex-shrink:0}
+  .user-info{display:flex;align-items:center;gap:10px}
+  .user-name{font-size:12px;font-weight:600}
+  .user-email{font-size:11px;color:var(--muted)}
+  .page{display:none;padding:32px;min-height:100%}
+  .page.active{display:block}
+  .page-title{font-size:36px;font-weight:800;letter-spacing:1px;color:var(--text)}
+  .page-subtitle{color:var(--muted);font-size:13px;margin-top:4px}
+  .page-header{margin-bottom:28px;display:flex;align-items:flex-start;justify-content:space-between}
+  .btn{background:var(--gold);color:#000;border:none;padding:10px 22px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+  .btn:hover{background:#f0c85a;transform:scale(1.02)}
+  .btn.outline{background:transparent;color:var(--gold);border:1px solid var(--gold)}
+  .btn.outline:hover{background:rgba(232,184,75,0.1)}
+  .btn.danger{background:var(--red);color:#fff}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px}
+  .auth-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:flex;align-items:center;justify-content:center}
+  .auth-box{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:36px;width:100%;max-width:400px}
+  .auth-title{font-size:24px;font-weight:800;color:var(--gold);margin-bottom:4px}
+  .auth-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+  .form-group{margin-bottom:14px}
+  .form-label{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px}
+  .form-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border .2s}
+  .form-input:focus{border-color:var(--gold)}
+  .auth-switch{text-align:center;margin-top:16px;font-size:13px;color:var(--muted)}
+  .auth-switch span{color:var(--gold);cursor:pointer}
+  .movie-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:20px}
+  .movie-card{border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .25s,box-shadow .25s;background:var(--surface)}
+  .movie-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,0.5)}
+  .movie-poster{width:100%;aspect-ratio:2/3;display:flex;align-items:center;justify-content:center;font-size:60px;position:relative}
+  .movie-badge{position:absolute;top:8px;left:8px;background:var(--red);color:#fff;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border-radius:4px}
+  .movie-badge.gold{background:var(--gold);color:#000}
+  .movie-rating{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);color:var(--gold);font-size:11px;font-weight:700;padding:3px 7px;border-radius:6px}
+  .movie-info{padding:12px}
+  .movie-title{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .movie-meta{color:var(--muted);font-size:11px;margin-top:3px}
+  .search-bar{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 16px;margin-bottom:20px}
+  .search-bar input{background:none;border:none;outline:none;color:var(--text);font-family:inherit;font-size:14px;flex:1}
+  .search-bar input::placeholder{color:var(--muted)}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+  .filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s}
+  .filter-btn:hover,.filter-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(232,184,75,0.08)}
+  .booking-overlay{position:fixed;inset:0;z-index:100;background:var(--bg);overflow-y:auto;display:none}
+  .booking-overlay.open{display:block}
+  .flow-header{display:flex;align-items:center;gap:16px;padding:20px 32px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:10}
+  .back-btn{background:var(--surface);border:none;color:var(--text);width:36px;height:36px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px}
+  .back-btn:hover{background:var(--bg4)}
+  .flow-steps{display:flex;align-items:center;gap:0;margin-left:auto}
+  .step-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:1.5px solid var(--border2);color:var(--muted);transition:all .3s}
+  .step-num.done{background:var(--gold);border-color:var(--gold);color:#000}
+  .step-num.active{border-color:var(--gold);color:var(--gold)}
+  .step-label{color:var(--muted);font-size:12px}
+  .step-label.active{color:var(--text)}
+  .step-div{width:32px;height:1px;background:var(--border2);margin:0 8px}
+  .flow-body{padding:32px;max-width:900px;margin:0 auto}
+  .step-item{display:flex;align-items:center;gap:8px}
+  .section-title{font-size:20px;font-weight:700;margin-bottom:16px}
+  .date-row{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+  .date-chip{padding:8px 16px;border-radius:10px;border:1px solid var(--border2);background:none;color:var(--text);font-family:inherit;font-size:13px;cursor:pointer;transition:all .2s;text-align:center;min-width:80px}
+  .date-chip:hover,.date-chip.active{background:var(--gold);border-color:var(--gold);color:#000;font-weight:700}
+  .showtime-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:24px}
+  .showtime-btn{padding:12px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-family:inherit;cursor:pointer;transition:all .2s;text-align:center}
+  .showtime-btn:hover,.showtime-btn.active{border-color:var(--gold);background:rgba(232,184,75,0.08);color:var(--gold)}
+  .showtime-time{font-size:16px;font-weight:700;display:block}
+  .showtime-hall{font-size:11px;color:var(--muted);margin-top:2px}
+  .avail{font-size:10px;margin-top:4px}
+  .avail.high{color:var(--green)}.avail.med{color:var(--gold)}.avail.low{color:var(--red)}
+  .screen-label{text-align:center;color:var(--muted);font-size:11px;letter-spacing:4px;text-transform:uppercase;margin-bottom:8px}
+  .screen-bar{height:4px;background:linear-gradient(90deg,transparent,var(--gold-dim),transparent);border-radius:2px;margin-bottom:28px}
+  .seat-row{display:flex;align-items:center;gap:5px;justify-content:center;margin-bottom:6px}
+  .row-label{width:20px;font-size:11px;color:var(--muted);text-align:center;flex-shrink:0}
+  .seat{width:26px;height:22px;border-radius:4px 4px 3px 3px;cursor:pointer;transition:all .15s;border:none;flex-shrink:0}
+  .seat.gap{opacity:0;pointer-events:none}
+  .seat.available{background:rgba(59,222,140,0.5)}
+  .seat.available:hover{background:var(--green);transform:scale(1.15)}
+  .seat.taken{background:var(--bg4);cursor:not-allowed;opacity:0.4}
+  .seat.selected{background:var(--gold);transform:scale(1.1)}
+  .seat.premium{background:rgba(75,155,232,0.5)}
+  .seat.premium:hover{background:var(--blue);transform:scale(1.15)}
+  .seat.premium.selected{background:var(--gold)}
+  .seat-legend{display:flex;gap:16px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+  .legend-dot{width:14px;height:12px;border-radius:3px 3px 2px 2px}
+  .summary-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:20px}
+  .summary-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px}
+  .summary-row.total{border-top:1px solid var(--border);margin-top:6px;padding-top:10px;font-weight:700;font-size:15px}
+  .lock-notice{display:flex;align-items:center;gap:8px;background:rgba(232,184,75,0.08);border:1px solid rgba(232,184,75,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--gold);margin-top:12px}
+  .payment-layout{display:grid;grid-template-columns:1fr 300px;gap:24px}
+  .pay-methods{display:flex;gap:10px;margin-bottom:20px}
+  .pay-btn{flex:1;padding:12px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s}
+  .pay-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(232,184,75,0.06)}
+  .order-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;height:fit-content}
+  .promo-row{display:flex;gap:8px;margin-bottom:14px}
+  .promo-input{flex:1}
+  .apply-btn{background:var(--bg4);border:1px solid var(--border2);color:var(--text);border-radius:10px;padding:0 14px;font-family:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+  .apply-btn:hover{background:var(--gold);color:#000;border-color:var(--gold)}
+  .secure-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);justify-content:center;margin-top:12px}
+  .confirm-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;max-width:480px;margin:0 auto}
+  .confirm-header{background:rgba(232,184,75,0.08);padding:28px;text-align:center;border-bottom:1px dashed var(--border2)}
+  .confirm-check{width:56px;height:56px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:26px}
+  .confirm-body{padding:24px}
+  .confirm-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+  .confirm-row:last-child{border-bottom:none}
+  .confirm-key{color:var(--muted)}
+  .confirm-val{font-weight:600;text-align:right}
+  .booking-id{font-size:20px;font-weight:800;color:var(--gold);letter-spacing:3px}
+  .ticket-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;gap:16px;padding:16px 20px;margin-bottom:12px}
+  .ticket-poster{width:44px;height:66px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+  .ticket-details{flex:1}
+  .ticket-title{font-weight:600;font-size:14px}
+  .ticket-meta{color:var(--muted);font-size:12px;margin-top:3px}
+  .seat-chips{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+  .seat-chip{background:var(--bg4);border-radius:4px;padding:2px 7px;font-size:11px;color:var(--text)}
+  .status-badge{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600}
+  .status-badge.confirmed{background:rgba(59,222,140,0.12);color:var(--green)}
+  .status-badge.upcoming{background:rgba(232,184,75,0.12);color:var(--gold)}
+  .status-badge.cancelled{background:rgba(232,59,59,0.12);color:var(--red)}
+  .ticket-amount{font-size:15px;font-weight:700;color:var(--gold);text-align:right}
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:28px}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+  .stat-label{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .stat-value{font-size:32px;font-weight:800;line-height:1}
+  .stat-change{font-size:12px;margin-top:6px}
+  .stat-change.up{color:var(--green)}.stat-change.down{color:var(--red)}
+  .occ-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .occ-label{font-size:12px;color:var(--muted);width:160px;flex-shrink:0}
+  .occ-bar{flex:1;height:8px;background:var(--bg4);border-radius:4px;overflow:hidden}
+  .occ-fill{height:100%;border-radius:4px;transition:width .6s}
+  .occ-pct{font-size:12px;width:36px;text-align:right}
+  .toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+  .toast{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;font-size:13px;display:flex;align-items:center;gap:10px;min-width:220px;animation:slideIn .3s ease}
+  .toast.success{border-left:3px solid var(--green)}.toast.error{border-left:3px solid var(--red)}.toast.info{border-left:3px solid var(--gold)}
+  @keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+  .spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .tag{padding:4px 10px;border-radius:6px;font-size:11px;border:1px solid var(--border2);color:var(--muted);display:inline-block;margin:2px}
+  .movie-detail-header{display:flex;gap:24px;margin-bottom:28px}
+  .movie-detail-poster{width:110px;height:165px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:52px;flex-shrink:0}
+  .movie-desc{color:rgba(255,255,255,0.6);font-size:13px;line-height:1.6;margin-top:8px}
+  .error-msg{color:var(--red);font-size:12px;margin-top:6px}
+  .text-gold{color:var(--gold)}.text-green{color:var(--green)}.text-red{color:var(--red)}.text-muted{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- AUTH OVERLAY -->
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-box">
+    <div class="auth-title">🎬 CineBook Pro</div>
+    <div class="auth-sub" id="auth-sub">Sign in to book tickets</div>
+    <div id="auth-form-login">
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="login-email" type="email" placeholder="user@cinebook.com" value="user@cinebook.com"></div>
+      <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="login-pass" type="password" placeholder="••••••" value="user123"></div>
+      <div id="login-error" class="error-msg" style="display:none"></div>
+      <button class="btn" style="width:100%;justify-content:center;margin-top:8px" onclick="doLogin()">Sign In</button>
+      <div class="auth-switch">Don't have an account? <span onclick="showRegister()">Register</span></div>
+    </div>
+    <div id="auth-form-register" style="display:none">
+      <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="reg-name" placeholder="Rahul Kumar"></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="reg-email" type="email" placeholder="you@email.com"></div>
+      <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="reg-pass" type="password" placeholder="min 6 characters"></div>
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="reg-phone" placeholder="9876543210"></div>
+      <div id="reg-error" class="error-msg" style="display:none"></div>
+      <button class="btn" style="width:100%;justify-content:center;margin-top:8px" onclick="doRegister()">Create Account</button>
+      <div class="auth-switch">Already have an account? <span onclick="showLogin()">Sign In</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app" id="main-app" style="display:none">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-logo">CineBook</div><div class="brand-sub">Pro Platform</div></div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="navigate('home',this)">🎬 Browse Movies</div>
+      <div class="nav-item" onclick="navigate('bookings',this)">🎟️ My Bookings</div>
+      <div class="nav-item" onclick="navigate('stats',this)">📊 Analytics</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="user-av">?</div>
+        <div><div class="user-name" id="user-name-lbl">Loading...</div><div class="user-email" id="user-email-lbl"></div></div>
+      </div>
+      <button class="btn danger" style="width:100%;justify-content:center;margin-top:12px;font-size:12px;padding:8px" onclick="logout()">Logout</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- HOME -->
+    <div id="page-home" class="page active">
+      <div class="page-header">
+        <div><div class="page-title">Now Showing</div><div class="page-subtitle">Book tickets for the hottest movies</div></div>
+      </div>
+      <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" placeholder="Search movies, genres..." oninput="searchMovies(this.value)">
+      </div>
+      <div class="filters">
+        <button class="filter-btn active" onclick="filterGenre('',this)">All</button>
+        <button class="filter-btn" onclick="filterGenre('Sci-Fi',this)">Sci-Fi</button>
+        <button class="filter-btn" onclick="filterGenre('Action',this)">Action</button>
+        <button class="filter-btn" onclick="filterGenre('Drama',this)">Drama</button>
+        <button class="filter-btn" onclick="filterGenre('Thriller',this)">Thriller</button>
+        <button class="filter-btn" onclick="filterGenre('Comedy',this)">Comedy</button>
+      </div>
+      <div class="movie-grid" id="movie-grid"><div class="spinner"></div></div>
+    </div>
+
+    <!-- BOOKINGS -->
+    <div id="page-bookings" class="page">
+      <div class="page-header"><div><div class="page-title">My Bookings</div><div class="page-subtitle">Your ticket history</div></div></div>
+      <div id="booking-list"><div class="spinner"></div></div>
+    </div>
+
+    <!-- STATS -->
+    <div id="page-stats" class="page">
+      <div class="page-header"><div><div class="page-title">Analytics</div><div class="page-subtitle">Real-time stats</div></div></div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="section-title">Screen Occupancy</div>
+      <div class="card" id="occ-section"></div>
+    </div>
+  </main>
+</div>
+
+<!-- BOOKING FLOW -->
+<div class="booking-overlay" id="booking-overlay">
+  <div class="flow-header">
+    <button class="back-btn" onclick="closeBooking()">←</button>
+    <span style="font-weight:600" id="flow-title"></span>
+    <div class="flow-steps">
+      <div class="step-item"><div class="step-num active" id="sn1">1</div><span class="step-label active" id="sl1">Showtime</span></div>
+      <div class="step-div"></div>
+      <div class="step-item"><div class="step-num" id="sn2">2</div><span class="step-label" id="sl2">Seats</span></div>
+      <div class="step-div"></div>
+      <div class="step-item"><div class="step-num" id="sn3">3</div><span class="step-label" id="sl3">Payment</span></div>
+      <div class="step-div"></div>
+      <div class="step-item"><div class="step-num" id="sn4">4</div><span class="step-label" id="sl4">Confirm</span></div>
+    </div>
+  </div>
+  <div class="flow-body" id="flow-body"></div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+const API = '';  // same origin
+let token = localStorage.getItem('cb_token');
+let currentUser = JSON.parse(localStorage.getItem('cb_user') || 'null');
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+function showLogin(){ document.getElementById('auth-form-login').style.display=''; document.getElementById('auth-form-register').style.display='none'; }
+function showRegister(){ document.getElementById('auth-form-login').style.display='none'; document.getElementById('auth-form-register').style.display=''; }
+
+async function doLogin(){
+  const email=document.getElementById('login-email').value;
+  const pass=document.getElementById('login-pass').value;
+  const err=document.getElementById('login-error');
+  err.style.display='none';
+  try{
+    const res=await apiFetch('/api/auth/login',{method:'POST',body:JSON.stringify({email,password:pass})},false);
+    saveAuth(res.data); showApp();
+  }catch(e){ err.textContent=e.message||'Login failed'; err.style.display=''; }
+}
+
+async function doRegister(){
+  const name=document.getElementById('reg-name').value;
+  const email=document.getElementById('reg-email').value;
+  const pass=document.getElementById('reg-pass').value;
+  const phone=document.getElementById('reg-phone').value;
+  const err=document.getElementById('reg-error');
+  err.style.display='none';
+  try{
+    const res=await apiFetch('/api/auth/register',{method:'POST',body:JSON.stringify({name,email,password:pass,phone})},false);
+    saveAuth(res.data); showApp();
+  }catch(e){ err.textContent=e.message||'Registration failed'; err.style.display=''; }
+}
+
+function saveAuth(data){
+  token=data.token; currentUser=data;
+  localStorage.setItem('cb_token',token);
+  localStorage.setItem('cb_user',JSON.stringify(data));
+}
+
+function logout(){
+  token=null; currentUser=null;
+  localStorage.removeItem('cb_token'); localStorage.removeItem('cb_user');
+  document.getElementById('main-app').style.display='none';
+  document.getElementById('auth-overlay').style.display='flex';
+}
+
+function showApp(){
+  document.getElementById('auth-overlay').style.display='none';
+  document.getElementById('main-app').style.display='flex';
+  document.getElementById('user-name-lbl').textContent=currentUser.name;
+  document.getElementById('user-email-lbl').textContent=currentUser.email;
+  document.getElementById('user-av').textContent=currentUser.name.charAt(0).toUpperCase();
+  loadMovies();
+}
+
+// ─── API helper ──────────────────────────────────────────────────────────────
+async function apiFetch(url, opts={}, auth=true){
+  const headers={'Content-Type':'application/json'};
+  if(auth && token) headers['Authorization']='Bearer '+token;
+  const res=await fetch(API+url,{...opts,headers:{...headers,...(opts.headers||{})}});
+  const json=await res.json();
+  if(!res.ok || !json.success) throw new Error(json.message||'Request failed');
+  return json;
+}
+
+// ─── Navigation ──────────────────────────────────────────────────────────────
+function navigate(page, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(el) el.classList.add('active');
+  if(page==='bookings') loadBookings();
+  if(page==='stats') loadStats();
+}
+
+// ─── Movies ──────────────────────────────────────────────────────────────────
+let allMovies=[];
+async function loadMovies(){
+  try{
+    const res=await apiFetch('/api/movies');
+    allMovies=res.data;
+    renderMovies(allMovies);
+  }catch(e){ toast('Failed to load movies','error'); }
+}
+
+function renderMovies(list){
+  const grid=document.getElementById('movie-grid');
+  if(!list.length){ grid.innerHTML='<p style="color:var(--muted)">No movies found.</p>'; return; }
+  grid.innerHTML=list.map(m=>`
+    <div class="movie-card" onclick="openBooking(${m.id})">
+      <div class="movie-poster" style="background:linear-gradient(135deg,#1a1a2e,#2a1a3e)">
+        <span>${m.posterEmoji||'🎬'}</span>
+        ${m.format&&m.format!=='Standard'?`<div class="movie-badge gold">${m.format}</div>`:''}
+        <div class="movie-rating">⭐ ${m.imdbRating||'?'}</div>
+      </div>
+      <div class="movie-info">
+        <div class="movie-title">${m.title}</div>
+        <div class="movie-meta">${m.genre||''} · ${m.durationMinutes}min</div>
+      </div>
+    </div>`).join('');
+}
+
+function searchMovies(q){
+  if(!q) { renderMovies(allMovies); return; }
+  renderMovies(allMovies.filter(m=>m.title.toLowerCase().includes(q.toLowerCase())||m.genre.toLowerCase().includes(q.toLowerCase())));
+}
+
+function filterGenre(genre, btn){
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMovies(genre?allMovies.filter(m=>m.genre&&m.genre.toLowerCase().includes(genre.toLowerCase())):allMovies);
+}
+
+// ─── Booking Flow State ──────────────────────────────────────────────────────
+let bState={movie:null,showtimes:[],selectedShowtime:null,seatMap:[],selectedSeats:[],lockTimer:null,lockSeconds:600,payMethod:'CARD',promoApplied:false,promoCode:''};
+
+async function openBooking(movieId){
+  bState={movie:null,showtimes:[],selectedShowtime:null,seatMap:[],selectedSeats:[],lockTimer:null,lockSeconds:600,payMethod:'CARD',promoApplied:false,promoCode:''};
+  try{
+    const [mRes,stRes]=await Promise.all([apiFetch(`/api/movies/${movieId}`),apiFetch(`/api/showtimes/movie/${movieId}`)]);
+    bState.movie=mRes.data; bState.showtimes=stRes.data;
+    document.getElementById('flow-title').textContent=bState.movie.title;
+    document.getElementById('booking-overlay').classList.add('open');
+    renderFlowStep(1);
+  }catch(e){ toast('Failed to load movie: '+e.message,'error'); }
+}
+
+function closeBooking(){
+  document.getElementById('booking-overlay').classList.remove('open');
+  clearInterval(bState.lockTimer);
+  // unlock seats if locked
+  if(bState.selectedShowtime && bState.selectedSeats.length){
+    apiFetch('/api/seats/unlock',{method:'POST',body:JSON.stringify({showtimeId:bState.selectedShowtime.id,seatCodes:bState.selectedSeats})}).catch(()=>{});
+  }
+}
+
+function renderFlowStep(n){
+  [1,2,3,4].forEach(i=>{
+    const num=document.getElementById('sn'+i),lbl=document.getElementById('sl'+i);
+    num.className='step-num'+(i<n?' done':i===n?' active':'');
+    lbl.className='step-label'+(i===n?' active':'');
+    num.textContent=i<n?'✓':i;
+  });
+  const body=document.getElementById('flow-body');
+  if(n===1) body.innerHTML=buildStep1();
+  if(n===2) renderStep2(body);
+  if(n===3) body.innerHTML=buildStep3();
+  if(n===4) body.innerHTML=buildStep4();
+}
+
+// ─── Step 1: Showtime ─────────────────────────────────────────────────────────
+function buildStep1(){
+  const m=bState.movie;
+  const days=[...Array(5)].map((_,i)=>{
+    const d=new Date(); d.setDate(d.getDate()+i);
+    return {label:i===0?'Today':i===1?'Tomorrow':d.toLocaleDateString('en-IN',{weekday:'short'}), date:d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})};
+  });
+  // Group showtimes by date
+  const byDate={};
+  bState.showtimes.forEach(st=>{
+    const d=new Date(st.showDateTime);
+    const key=d.toDateString();
+    if(!byDate[key]) byDate[key]=[];
+    byDate[key].push(st);
+  });
+  const dayKeys=Object.keys(byDate);
+
+  const dateChips=days.map((d,i)=>`<button class="date-chip ${i===0?'active':''}" onclick="selectDate(${i},this)">${d.label}<br><strong>${d.date}</strong></button>`).join('');
+
+  let showtimeHtml='<p style="color:var(--muted);font-size:13px">No showtimes available for this date.</p>';
+  if(dayKeys.length){
+    const todayKey=new Date().toDateString();
+    const sts=byDate[todayKey]||byDate[dayKeys[0]]||[];
+    showtimeHtml=buildShowtimeGrid(sts);
+  }
+
+  return `
+    <div class="movie-detail-header">
+      <div class="movie-detail-poster" style="background:linear-gradient(135deg,#1a1a2e,#2a1a3e)">${m.posterEmoji||'🎬'}</div>
+      <div>
+        <div style="font-size:28px;font-weight:800;margin-bottom:8px">${m.title}</div>
+        <div>${(m.genre||'').split(',').map(g=>`<span class="tag">${g.trim()}</span>`).join('')}<span class="tag">${m.durationMinutes}min</span><span class="tag">${m.language||''}</span>${m.format&&m.format!=='Standard'?`<span class="tag" style="border-color:var(--gold);color:var(--gold)">${m.format}</span>`:''}</div>
+        <div class="movie-desc">${m.description||''}</div>
+        <div style="margin-top:10px;font-size:13px">⭐ <strong>${m.imdbRating}</strong> / 10 &nbsp;·&nbsp; <span class="text-muted">Standard from ₹${bState.showtimes[0]?.standardPrice||'—'}</span></div>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Select Date</div>
+    <div class="date-row">${dateChips}</div>
+    <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Select Showtime</div>
+    <div id="showtime-grid">${showtimeHtml}</div>
+    <button class="btn" style="width:100%;justify-content:center;padding:14px;margin-top:16px" onclick="goStep2()">Continue → Select Seats</button>`;
+}
+
+function buildShowtimeGrid(sts){
+  if(!sts.length) return '<p style="color:var(--muted);font-size:13px">No showtimes for this date.</p>';
+  return `<div class="showtime-grid">${sts.map(st=>{
+    const d=new Date(st.showDateTime);
+    const time=d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    const pct=st.availableSeats/Math.max(st.totalSeats,1);
+    const avail=pct>0.5?'high':pct>0.2?'med':'low';
+    const availText=pct>0.5?'Available':pct>0.2?'Filling up':'Almost full';
+    return `<button class="showtime-btn ${bState.selectedShowtime?.id===st.id?'active':''}" onclick='selectShowtime(${JSON.stringify(st)})'>
+      <span class="showtime-time">${time}</span>
+      <div class="showtime-hall">${st.hallName}</div>
+      <div class="avail ${avail}">${availText} (${st.availableSeats})</div>
+    </button>`;
+  }).join('')}</div>`;
+}
+
+function selectDate(i, btn){
+  document.querySelectorAll('.date-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const d=new Date(); d.setDate(d.getDate()+i);
+  const sts=bState.showtimes.filter(st=>new Date(st.showDateTime).toDateString()===d.toDateString());
+  document.getElementById('showtime-grid').innerHTML=buildShowtimeGrid(sts);
+}
+
+function selectShowtime(st){
+  bState.selectedShowtime=st;
+  document.querySelectorAll('.showtime-btn').forEach(b=>b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+
+async function goStep2(){
+  if(!bState.selectedShowtime){ toast('Please select a showtime','error'); return; }
+  try{
+    const res=await apiFetch(`/api/seats/showtime/${bState.selectedShowtime.id}`);
+    bState.seatMap=res.data; bState.selectedSeats=[];
+    renderFlowStep(2);
+    startLockTimer();
+  }catch(e){ toast('Failed to load seats: '+e.message,'error'); }
+}
+
+// ─── Step 2: Seats ────────────────────────────────────────────────────────────
+function renderStep2(body){
+  const rows=[...new Set(bState.seatMap.map(s=>s.rowLabel))];
+  const rowsHtml=rows.map(r=>{
+    const rowSeats=bState.seatMap.filter(s=>s.rowLabel===r);
+    const btns=rowSeats.map((s,i)=>{
+      if(i===6) return `<button class="seat gap"></button>`;
+      let cls=s.status==='BOOKED'||s.status==='LOCKED'?'taken':s.seatType==='PREMIUM'?'premium':'available';
+      if(bState.selectedSeats.includes(s.seatCode)) cls='selected';
+      const disabled=s.status!=='AVAILABLE'&&!bState.selectedSeats.includes(s.seatCode)?'disabled':'';
+      return `<button class="seat ${cls}" ${disabled} onclick="toggleSeat('${s.seatCode}','${s.seatType}')" title="${s.seatCode}"></button>`;
+    }).join('');
+    return `<div class="seat-row"><span class="row-label">${r}</span>${btns}</div>`;
+  }).join('');
+
+  body.innerHTML=`
+    <div class="screen-label">◀ — SCREEN — ▶</div>
+    <div class="screen-bar"></div>
+    ${rowsHtml}
+    <div class="seat-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(59,222,140,0.5)"></div>Standard</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(75,155,232,0.5)"></div>Premium</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Selected</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--bg4);opacity:.4"></div>Taken</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-row"><span class="text-muted">Selected Seats</span><span id="sel-seats-lbl">None</span></div>
+      <div class="summary-row"><span class="text-muted">Standard (₹${bState.selectedShowtime.standardPrice})</span><span id="std-lbl">0 seats</span></div>
+      <div class="summary-row"><span class="text-muted">Premium (₹${bState.selectedShowtime.premiumPrice})</span><span id="prem-lbl">0 seats</span></div>
+      <div class="summary-row"><span class="text-muted">Convenience Fee</span><span>₹30/seat</span></div>
+      <div class="summary-row total"><span>Total</span><span class="text-gold" id="total-lbl">₹0</span></div>
+    </div>
+    <div class="lock-notice">🔒 Seats will be locked for <span id="seat-timer" style="font-weight:800">10:00</span> once you proceed to payment</div>
+    <button class="btn" style="width:100%;justify-content:center;padding:14px;margin-top:14px" onclick="goStep3()">Continue → Payment</button>`;
+  updateSeatSummary();
+}
+
+function toggleSeat(code, type){
+  if(bState.selectedSeats.includes(code)){
+    bState.selectedSeats=bState.selectedSeats.filter(s=>s!==code);
+  } else {
+    if(bState.selectedSeats.length>=8){ toast('Max 8 seats per booking','error'); return; }
+    bState.selectedSeats.push(code);
+  }
+  // Re-render just the seat buttons
+  const body=document.getElementById('flow-body');
+  renderStep2(body);
+}
+
+function updateSeatSummary(){
+  const st=bState.selectedShowtime;
+  const sel=bState.seatMap.filter(s=>bState.selectedSeats.includes(s.seatCode));
+  const prem=sel.filter(s=>s.seatType==='PREMIUM');
+  const std=sel.filter(s=>s.seatType==='STANDARD');
+  const subtotal=std.length*parseFloat(st.standardPrice)+prem.length*parseFloat(st.premiumPrice);
+  const fee=sel.length*30;
+  const total=subtotal+fee;
+  const el=id=>document.getElementById(id);
+  if(el('sel-seats-lbl')) el('sel-seats-lbl').textContent=bState.selectedSeats.join(', ')||'None';
+  if(el('std-lbl')) el('std-lbl').textContent=`${std.length} × ₹${st.standardPrice}`;
+  if(el('prem-lbl')) el('prem-lbl').textContent=`${prem.length} × ₹${st.premiumPrice}`;
+  if(el('total-lbl')) el('total-lbl').textContent=`₹${total}`;
+  bState.total=total;
+}
+
+function startLockTimer(){
+  clearInterval(bState.lockTimer);
+  bState.lockSeconds=600;
+  bState.lockTimer=setInterval(()=>{
+    bState.lockSeconds--;
+    const el=document.getElementById('seat-timer');
+    if(el){
+      const m=String(Math.floor(bState.lockSeconds/60)).padStart(2,'0');
+      const s=String(bState.lockSeconds%60).padStart(2,'0');
+      el.textContent=`${m}:${s}`;
+      if(bState.lockSeconds<=60) el.style.color='var(--red)';
+    }
+    if(bState.lockSeconds<=0){ clearInterval(bState.lockTimer); closeBooking(); toast('Session expired. Please try again.','error'); }
+  },1000);
+}
+
+async function goStep3(){
+  if(!bState.selectedSeats.length){ toast('Please select at least one seat','error'); return; }
+  try{
+    await apiFetch('/api/seats/lock',{method:'POST',body:JSON.stringify({showtimeId:bState.selectedShowtime.id,seatCodes:bState.selectedSeats})});
+    toast('Seats locked for 10 minutes! 🔒','info');
+    renderFlowStep(3);
+  }catch(e){ toast('Failed to lock seats: '+e.message,'error'); }
+}
+
+// ─── Step 3: Payment ──────────────────────────────────────────────────────────
+function buildStep3(){
+  const disc=bState.promoApplied?Math.round(bState.total*0.1):0;
+  const final=bState.total-disc;
+  bState.finalAmount=final;
+  const formsByMethod={
+    CARD:`<div class="form-group"><label class="form-label">Card Number</label><input class="form-input" placeholder="1234  5678  9012  3456"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group"><label class="form-label">Expiry</label><input class="form-input" placeholder="MM/YY"></div>
+            <div class="form-group"><label class="form-label">CVV</label><input class="form-input" placeholder="•••"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Name on Card</label><input class="form-input" placeholder="${currentUser.name}"></div>`,
+    UPI:`<div class="form-group"><label class="form-label">UPI ID</label><input class="form-input" placeholder="yourname@upi"></div>
+         <div style="display:flex;gap:8px;margin-top:8px">
+           <button class="apply-btn" style="padding:10px 16px;border-radius:8px">📱 PhonePe</button>
+           <button class="apply-btn" style="padding:10px 16px;border-radius:8px">🟢 GPay</button>
+           <button class="apply-btn" style="padding:10px 16px;border-radius:8px">🔷 Paytm</button>
+         </div>`,
+    NET_BANKING:`<div class="form-group"><label class="form-label">Select Bank</label>
+                 <select class="form-input"><option>State Bank of India</option><option>HDFC Bank</option><option>ICICI Bank</option><option>Axis Bank</option></select></div>`
+  };
+  return `<div class="payment-layout">
+    <div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Payment Method</div>
+      <div class="pay-methods">
+        <button class="pay-btn ${bState.payMethod==='CARD'?'active':''}" onclick="setPayMethod('CARD')">💳 Card</button>
+        <button class="pay-btn ${bState.payMethod==='UPI'?'active':''}" onclick="setPayMethod('UPI')">📱 UPI</button>
+        <button class="pay-btn ${bState.payMethod==='NET_BANKING'?'active':''}" onclick="setPayMethod('NET_BANKING')">🏦 Net Banking</button>
+      </div>
+      ${formsByMethod[bState.payMethod]}
+      <button class="btn" style="width:100%;justify-content:center;padding:14px;margin-top:8px" onclick="processPayment()">🔒 Pay ₹${final} Securely</button>
+      <div class="secure-badge">🔒 256-bit SSL · PCI-DSS Compliant</div>
+    </div>
+    <div>
+      <div class="order-card">
+        <div style="font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:14px">Order Summary</div>
+        <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+          <div style="font-weight:700">${bState.movie.title}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">${new Date(bState.selectedShowtime.showDateTime).toLocaleString('en-IN',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+          <div style="font-size:12px;color:var(--muted)">${bState.selectedShowtime.hallName}</div>
+          <div style="font-size:12px;color:var(--gold);margin-top:4px">${bState.selectedSeats.join(', ')}</div>
+        </div>
+        <div class="promo-row">
+          <input class="form-input promo-input" id="promo-input" placeholder="Promo code" ${bState.promoApplied?`disabled value="${bState.promoCode}"`:''}> 
+          <button class="apply-btn" onclick="applyPromo()">${bState.promoApplied?'✓':'Apply'}</button>
+        </div>
+        <div class="summary-row"><span class="text-muted">Subtotal</span><span>₹${bState.total}</span></div>
+        ${disc?`<div class="summary-row"><span class="text-green">Promo Discount</span><span class="text-green">−₹${disc}</span></div>`:''}
+        <div class="summary-row total"><span>Total</span><span class="text-gold">₹${final}</span></div>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted)">Refundable 2h before showtime</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function setPayMethod(m){ bState.payMethod=m; renderFlowStep(3); }
+function applyPromo(){
+  const v=document.getElementById('promo-input').value.trim().toUpperCase();
+  if(['SAVE10','FIRST50','WEEKEND20'].includes(v)){ bState.promoApplied=true; bState.promoCode=v; toast('Promo applied! 10% off 🎉','success'); renderFlowStep(3); }
+  else toast('Invalid promo code','error');
+}
+
+async function processPayment(){
+  toast('Processing payment…','info');
+  clearInterval(bState.lockTimer);
+  const txnId='TXN'+Date.now();
+  try{
+    const res=await apiFetch('/api/bookings',{method:'POST',body:JSON.stringify({
+      showtimeId:bState.selectedShowtime.id,
+      seatCodes:bState.selectedSeats,
+      promoCode:bState.promoApplied?bState.promoCode:null,
+      paymentMethod:bState.payMethod,
+      paymentTransactionId:txnId
+    })});
+    bState.booking=res.data;
+    toast('Payment successful! 🎉','success');
+    renderFlowStep(4);
+  }catch(e){ toast('Payment failed: '+e.message,'error'); }
+}
+
+// ─── Step 4: Confirmation ─────────────────────────────────────────────────────
+function buildStep4(){
+  const b=bState.booking;
+  if(!b) return '<p>Something went wrong.</p>';
+  const showDate=new Date(b.showDateTime).toLocaleString('en-IN',{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
+  return `<div style="text-align:center;margin-bottom:24px">
+    <div style="font-size:28px;font-weight:800;color:var(--green)">Booking Confirmed! 🎉</div>
+    <div style="color:var(--muted);font-size:13px;margin-top:4px">Your seats are reserved. Enjoy the show!</div>
+  </div>
+  <div class="confirm-card">
+    <div class="confirm-header">
+      <div class="confirm-check">🎬</div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:6px">${b.movieTitle}</div>
+      <div class="booking-id">${b.bookingCode}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">Show this code at the cinema entrance</div>
+    </div>
+    <div class="confirm-body">
+      <div class="confirm-row"><span class="confirm-key">Date & Time</span><span class="confirm-val">${showDate}</span></div>
+      <div class="confirm-row"><span class="confirm-key">Hall</span><span class="confirm-val">${b.hallName}</span></div>
+      <div class="confirm-row"><span class="confirm-key">Seats</span><span class="confirm-val text-gold">${(b.seatCodes||[]).join(', ')}</span></div>
+      <div class="confirm-row"><span class="confirm-key">Amount Paid</span><span class="confirm-val text-green">₹${b.finalAmount}</span></div>
+      ${b.promoCode?`<div class="confirm-row"><span class="confirm-key">Promo Applied</span><span class="confirm-val text-green">${b.promoCode} (-₹${b.discountAmount})</span></div>`:''}
+      <div class="confirm-row"><span class="confirm-key">Payment</span><span class="confirm-val">${b.paymentMethod}</span></div>
+      <div class="confirm-row"><span class="confirm-key">Booking ID</span><span class="confirm-val text-gold">${b.bookingCode}</span></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:12px;margin-top:20px;justify-content:center;flex-wrap:wrap">
+    <button class="btn" onclick="toast('Ticket sent to your email!','success')">📧 Email Ticket</button>
+    <button class="btn outline" onclick="closeBooking();navigate('bookings',document.querySelectorAll('.nav-item')[1])">View My Bookings</button>
+  </div>`;
+}
+
+// ─── My Bookings ─────────────────────────────────────────────────────────────
+async function loadBookings(){
+  const list=document.getElementById('booking-list');
+  list.innerHTML='<div class="spinner"></div>';
+  try{
+    const res=await apiFetch('/api/bookings');
+    const bookings=res.data;
+    if(!bookings.length){ list.innerHTML='<p style="color:var(--muted)">No bookings yet. <span style="color:var(--gold);cursor:pointer" onclick="navigate(\'home\',document.querySelectorAll(\'.nav-item\')[0])">Browse movies →</span></p>'; return; }
+    list.innerHTML=bookings.map(b=>{
+      const d=new Date(b.showDateTime);
+      const isPast=d<new Date();
+      const status=b.status==='CONFIRMED'?(isPast?'confirmed':'upcoming'):b.status.toLowerCase();
+      return `<div class="ticket-card">
+        <div class="ticket-poster" style="background:linear-gradient(135deg,#1a1a2e,#2a1a3e)">🎬</div>
+        <div class="ticket-details">
+          <div class="ticket-title">${b.movieTitle}</div>
+          <div class="ticket-meta">${d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} · ${d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} · ${b.hallName}</div>
+          <div class="seat-chips">${(b.seatCodes||[]).map(s=>`<span class="seat-chip">${s}</span>`).join('')}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div class="ticket-amount">₹${b.finalAmount}</div>
+          <div class="status-badge ${status}" style="margin-top:8px">${status.charAt(0).toUpperCase()+status.slice(1)}</div>
+          ${b.status==='CONFIRMED'&&!isPast?`<button class="btn danger" style="margin-top:8px;font-size:11px;padding:6px 12px" onclick="cancelBooking(${b.id})">Cancel</button>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){ list.innerHTML=`<p class="text-red">Failed to load bookings: ${e.message}</p>`; }
+}
+
+async function cancelBooking(id){
+  if(!confirm('Are you sure you want to cancel this booking?')) return;
+  try{
+    await apiFetch(`/api/bookings/${id}/cancel`,{method:'DELETE'});
+    toast('Booking cancelled','info');
+    loadBookings();
+  }catch(e){ toast('Cancellation failed: '+e.message,'error'); }
+}
+
+// ─── Analytics ────────────────────────────────────────────────────────────────
+async function loadStats(){
+  const screens=[
+    {name:'IMAX Hall 1',pct:94},{name:'Hall 2 — Premium',pct:82},{name:'Hall 3 — Standard',pct:67},
+    {name:'Hall 4 — Dolby',pct:55},{name:'Hall 5 — Classic',pct:41}
+  ];
+  document.getElementById('stats-grid').innerHTML=[
+    {label:'Today\'s Revenue',value:'₹2.4L',change:'↑ 18%',up:true},
+    {label:'Tickets Sold',value:'1,842',change:'↑ 214',up:true},
+    {label:'Avg Occupancy',value:'78%',change:'Across all screens',up:true},
+    {label:'Active Users',value:'394',change:'Booking right now',up:true},
+    {label:'Seat Lock Rate',value:'4.2%',change:'Abandoned sessions',up:false},
+    {label:'Avg Booking Time',value:'3.8m',change:'Search to payment',up:true},
+  ].map(s=>`<div class="stat-card">
+    <div class="stat-label">${s.label}</div>
+    <div class="stat-value ${s.up?'text-gold':''}">${s.value}</div>
+    <div class="stat-change ${s.up?'up':'down'}">${s.change}</div>
+  </div>`).join('');
+
+  document.getElementById('occ-section').innerHTML=screens.map(s=>`
+    <div class="occ-row">
+      <span class="occ-label">${s.name}</span>
+      <div class="occ-bar"><div class="occ-fill" style="width:${s.pct}%;background:${s.pct>=90?'var(--red)':s.pct>=65?'var(--gold)':'var(--green)'}"></div></div>
+      <span class="occ-pct">${s.pct}%</span>
+    </div>`).join('');
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function toast(msg,type='info'){
+  const icons={success:'✅',error:'❌',info:'⚡'};
+  const c=document.getElementById('toasts');
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<span>${icons[type]}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+if(token && currentUser){ showApp(); }
+</script>
+</body>
+</html>
