@@ -32,6 +32,7 @@ D:\SEM 6\labs\fs\cinebook-fixed\cinebook\src\main\java\com\cinebook\service\impl
 D:\SEM 6\labs\fs\cinebook-fixed\cinebook\src\main\java\com\cinebook\model\Showtime.java
 D:\SEM 6\labs\fs\cinebook-fixed\cinebook\src\main\java\com\cinebook\dto\LockSeatsRequest.java
 D:\SEM 6\labs\fs\cinebook-fixed\cinebook\src\main\java\com\cinebook\exception\ResourceNotFoundException.java
+D:\SEM 6\labs\fs\cinebook-fixed\cinebook\src\main\java\com\cinebook\job\ShowtimeGeneratorJob.java
 D:\SEM 6\labs\fs\cinebook-fixed\cinebook\src\main\java\com\cinebook\controller\MovieController.java
 D:\SEM 6\labs\fs\cinebook-fixed\cinebook\src\main\java\com\cinebook\dto\SeatDTO.java
 D:\SEM 6\labs\fs\cinebook-fixed\cinebook\src\main\java\com\cinebook\security\UserDetailsServiceImpl.java

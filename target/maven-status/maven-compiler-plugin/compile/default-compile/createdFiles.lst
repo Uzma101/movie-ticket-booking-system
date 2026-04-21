@@ -51,6 +51,7 @@ com\cinebook\model\Seat$SeatBuilder.class
 com\cinebook\model\Showtime$ShowtimeBuilder.class
 com\cinebook\controller\HallController.class
 com\cinebook\repository\UserRepository.class
+com\cinebook\job\ShowtimeGeneratorJob.class
 com\cinebook\security\JwtUtils.class
 com\cinebook\dto\LockSeatsRequest.class
 com\cinebook\controller\ShowtimeController.class

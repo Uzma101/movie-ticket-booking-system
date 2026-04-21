@@ -1,5 +1,0 @@
-# Created at 2026-04-16T00:24:30.465
-Boot Manifest-JAR contains absolute paths in classpath 'D:\SEM 6\labs\fs\cinebook-fixed\cinebook\target\test-classes'
-Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
-'other' has different root
-
